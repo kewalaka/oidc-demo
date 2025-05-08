@@ -45,6 +45,10 @@ jobs:
         with:
           resource_group_name: "rg-oidc-demo-${{ inputs.target_environment }}"
           storage_account_name: "stoidcdem${{ inputs.target_environment }}01"
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          TF_STATE_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
       - name: Terraform Init
         run: |
@@ -99,6 +103,10 @@ jobs:
         with:
           resource_group_name: "rg-oidc-demo-${{ inputs.target_environment }}"
           storage_account_name: "stoidcdem${{ inputs.target_environment }}01"
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          TF_STATE_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
       - name: Terraform Init
         run: |
