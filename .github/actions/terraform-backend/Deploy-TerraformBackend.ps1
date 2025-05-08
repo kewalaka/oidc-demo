@@ -33,12 +33,12 @@ function Grant-RBACRole {
     }
 }
 
-Import-Module Az.Storage, Az.Resources
+Import-Module Az.Storage, Az.Resources | Out-Null
 
 Write-Host "Ensuring Terraform backend storage exists..."
 Write-Host "Deploying Identity Client ID: $env:ARM_CLIENT_ID" # Environment variables are accessible
 
-$deployPrincipalId = $env:ARM_CLIENT_ID
+$deployPrincipalId = $env:ARM_CLIENT_ID.Trim()
 
 # Verify Resource Group exists and get location
 $rg = Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction SilentlyContinue
