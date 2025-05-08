@@ -3,14 +3,6 @@ name: Deploy IaC using Terraform
 on:
   workflow_dispatch:
     inputs:
-      terraform_action:
-        description: 'Terraform Action'
-        default: apply
-        type: choice
-        options:
-          - apply
-          - destroy
-          - plan
       target_environment:
         description: 'Select target environment'
         required: true
@@ -22,25 +14,117 @@ on:
         type: boolean
         default: false
 
+env:
+  iac_relative_path: "./iac"
+
 defaults:
   run:
     shell: bash
 
-run-name: ${{ github.workflow }} - Terraform ${{ inputs.terraform_action }} (${{ inputs.target_environment }}) by @${{ github.actor }}
+run-name: ${{ github.workflow }} - Terraform (${{ inputs.target_environment }}) by @${{ github.actor }}
 
 permissions:
   id-token: write
   contents: read
 
 jobs:
-  call-terraform-deploy:
-    name: "Run terraform ${{ inputs.terraform_action }} for ${{ inputs.target_environment }}"
-    uses: kewalaka/github-azure-iac-templates/.github/workflows/terraform-deploy-template.yml@main
-    with:
-      terraform_action: ${{ inputs.terraform_action }}
-      plan_target_environment: "${{ inputs.target_environment }}_terraform_plan"
-      apply_target_environment: "${{ inputs.target_environment }}_terraform_apply"
-      terraform_root_path: "./iac"
-      tfvars_file: "./environments/${{ inputs.target_environment }}/${{ inputs.target_environment }}.terraform.tfvars"
-      destroyResources: ${{ inputs.destroyResources == true || inputs.terraform_action == 'destroy' }}
-      bypassChecks: false
+  terraform-plan:
+    name: "Terraform Plan (${{ inputs.target_environment }})"
+    runs-on: ubuntu-latest
+    environment: "${{ inputs.target_environment }}-iac-plan"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Ensure Terraform Backend Exists
+        id: backend
+        uses: ./.github/actions/terraform-backend
+        with:
+          resource_group_name: "rg-oidc-demo-${{ inputs.target_environment }}"
+          storage_account_name: "stoidcdem${{ inputs.target_environment }}01"
+
+      - name: Terraform Init
+        run: |
+          $arguments = @()
+          $arguments += "init"
+          $arguments += "-backend-config=storage_account_name=$($env:BACKEND_AZURE_STORAGE_ACCOUNT_NAME)"
+          $arguments += "-backend-config=container_name=$($env:BACKEND_AZURE_STORAGE_ACCOUNT_CONTAINER_NAME)"
+          $arguments += "-backend-config=key=$($env:BACKEND_AZURE_STORAGE_ACCOUNT_CONTAINER_KEY_NAME)"
+          $arguments += "-backend-config=use_azuread_auth=true"
+
+          # Run terraform init
+          $command = "terraform"
+          Write-Host "Running: $command $arguments"
+          & $command $arguments
+        env:
+          BACKEND_AZURE_STORAGE_ACCOUNT_NAME: ${{ steps.backend.outputs.storage_account_name }}
+          BACKEND_AZURE_STORAGE_ACCOUNT_CONTAINER_NAME: ${{ steps.backend.outputs.container_name }}
+          BACKEND_AZURE_STORAGE_ACCOUNT_CONTAINER_KEY_NAME: ${{ steps.backend.outputs.key_name }}
+        working-directory: ${iac_relative_path}
+
+      - name: Terraform Plan
+        run: terraform plan -var-file="../environments/${{ inputs.target_environment }}/${{ inputs.target_environment }}.terraform.tfvars" -out=tfplan
+        working-directory: ./iac
+
+      - name: Upload Plan Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan
+          path: ./iac/tfplan
+
+  terraform-apply:
+    name: "Terraform Apply (${{ inputs.target_environment }})"
+    runs-on: ubuntu-latest
+    needs: terraform-plan
+    environment: "${{ inputs.target_environment }}-iac-apply"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Download Plan Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: tfplan
+          path: ./iac
+
+      - name: Ensure Terraform Backend Exists
+        id: backend
+        uses: ./.github/actions/terraform-backend
+        with:
+          resource_group_name: "rg-oidc-demo-${{ inputs.target_environment }}"
+          storage_account_name: "stoidcdem${{ inputs.target_environment }}01"
+
+      - name: Terraform Init
+        run: |
+          $arguments = @()
+          $arguments += "init"
+          $arguments += "-backend-config=storage_account_name=$($env:BACKEND_AZURE_STORAGE_ACCOUNT_NAME)"
+          $arguments += "-backend-config=container_name=$($env:BACKEND_AZURE_STORAGE_ACCOUNT_CONTAINER_NAME)"
+          $arguments += "-backend-config=key=$($env:BACKEND_AZURE_STORAGE_ACCOUNT_CONTAINER_KEY_NAME)"
+          $arguments += "-backend-config=use_azuread_auth=true"
+
+          # Run terraform init
+          $command = "terraform"
+          Write-Host "Running: $command $arguments"
+          & $command $arguments
+        env:
+          BACKEND_AZURE_STORAGE_ACCOUNT_NAME: ${{ steps.backend.outputs.storage_account_name }}
+          BACKEND_AZURE_STORAGE_ACCOUNT_CONTAINER_NAME: ${{ steps.backend.outputs.container_name }}
+          BACKEND_AZURE_STORAGE_ACCOUNT_CONTAINER_KEY_NAME: ${{ steps.backend.outputs.key_name }}
+        working-directory: ${iac_relative_path}
+
+      - name: Terraform Apply
+        if: ${{ !inputs.destroyResources }}
+        run: terraform apply -auto-approve tfplan
+        working-directory: ./iac
+
+      - name: Terraform Destroy
+        if: ${{ inputs.destroyResources }}
+        run: terraform destroy -auto-approve -var-file="../environments/${{ inputs.target_environment }}/${{ inputs.target_environment }}.terraform.tfvars"
+        working-directory: ./iac
