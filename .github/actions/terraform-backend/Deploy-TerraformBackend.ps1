@@ -38,14 +38,7 @@ Import-Module Az.Storage, Az.Resources
 Write-Host "Ensuring Terraform backend storage exists..."
 Write-Host "Deploying Identity Client ID: $env:ARM_CLIENT_ID" # Environment variables are accessible
 
-# Get Principal ID of the deploying identity
-$deployPrincipal = Get-AzADServicePrincipal -Filter "appId eq '$env:ARM_CLIENT_ID'" -ErrorAction SilentlyContinue
-if ($null -eq $deployPrincipal) {
-    Write-Error "Could not find Service Principal with Application (Client) ID '$env:ARM_CLIENT_ID'. Ensure it exists and the logged-in identity has permission to read it."
-    exit 1 # Exit script, which fails the step due to errorActionPreference: Stop in the action yml
-}
-$deployPrincipalId = $deployPrincipal.Id
-Write-Host "Found deploying identity Principal ID: $deployPrincipalId"
+$deployPrincipalId = $env:ARM_CLIENT_ID
 
 # Verify Resource Group exists and get location
 $rg = Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction SilentlyContinue
