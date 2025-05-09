@@ -83,8 +83,11 @@ jobs:
         working-directory: ${{ env.iac_relative_path }}
 
       - name: Terraform Plan
-        run: terraform plan -var-file="./environments/${{ inputs.target_environment }}.terraform.tfvars" -out=tfplan
-        working-directory: ./iac
+        run: |
+          terraform plan -var-file="./environments/${{ inputs.target_environment }}.terraform.tfvars" \
+          -out=tfplan -input=false \
+          ${{ inputs.destroyResources == 'true' && '-destroy' || '' }}
+        working-directory: ${{ env.iac_relative_path }}
         env:
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
@@ -92,7 +95,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: tfplan
-          path: ./iac/tfplan
+          path: ${{ env.iac_relative_path }}/tfplan
 
   terraform-apply:
     name: "Terraform Apply (${{ inputs.target_environment }})"
@@ -110,7 +113,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: tfplan
-          path: ./iac
+          path: ${{ env.iac_relative_path }}
 
       - name: Login to Azure
         uses: azure/login@v1
@@ -156,13 +159,13 @@ jobs:
       - name: Terraform Apply
         if: ${{ !inputs.destroyResources }}
         run: terraform apply -auto-approve tfplan
-        working-directory: ./iac
+        working-directory: ${{ env.iac_relative_path }}
         env:
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
       - name: Terraform Destroy
         if: ${{ inputs.destroyResources }}
         run: terraform destroy -auto-approve -var-file="./environments/${{ inputs.target_environment }}.terraform.tfvars"
-        working-directory: ./iac
+        working-directory: ${{ env.iac_relative_path }}
         env:
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
