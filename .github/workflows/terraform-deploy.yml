@@ -16,6 +16,8 @@ on:
 
 env:
   iac_relative_path: "./iac"
+  tf_state_resource_group_name: "rg-oidc-demo-${{ inputs.target_environment }}"
+  tf_state_storage_account_name: "stoidcdem${{ inputs.target_environment }}01"
 
 defaults:
   run:
@@ -40,11 +42,10 @@ jobs:
         uses: hashicorp/setup-terraform@v3
 
       - name: Ensure Terraform Backend Exists
-        id: backend
         uses: ./.github/actions/terraform-backend
         with:
-          resource_group_name: "rg-oidc-demo-${{ inputs.target_environment }}"
-          storage_account_name: "stoidcdem${{ inputs.target_environment }}01"
+          resource_group_name: ${{ env.tf_state_resource_group_name }}
+          storage_account_name: ${{ env.tf_state_storage_account_name }}
         env:
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
@@ -54,6 +55,7 @@ jobs:
         run: |
           arguments=()
           arguments+=("init")
+          arguments+=("-backend-config=resource_group_name=${BACKEND_AZURE_RESOURCE_GROUP_NAME}")
           arguments+=("-backend-config=storage_account_name=${BACKEND_AZURE_STORAGE_ACCOUNT_NAME}")
           arguments+=("-backend-config=container_name=${BACKEND_AZURE_STORAGE_ACCOUNT_CONTAINER_NAME}")
           arguments+=("-backend-config=key=${BACKEND_AZURE_STORAGE_ACCOUNT_CONTAINER_KEY_NAME}")
@@ -64,9 +66,10 @@ jobs:
           echo "Running: $command ${arguments[@]}"
           $command "${arguments[@]}"
         env:
-          BACKEND_AZURE_STORAGE_ACCOUNT_NAME: ${{ steps.backend.outputs.storage_account_name }}
-          BACKEND_AZURE_STORAGE_ACCOUNT_CONTAINER_NAME: ${{ steps.backend.outputs.container_name }}
-          BACKEND_AZURE_STORAGE_ACCOUNT_CONTAINER_KEY_NAME: ${{ steps.backend.outputs.key_name }}
+          BACKEND_AZURE_RESOURCE_GROUP_NAME: ${{ env.tf_state_resource_group_name }}
+          BACKEND_AZURE_STORAGE_ACCOUNT_NAME: ${{ env.tf_state_storage_account_name }}
+          BACKEND_AZURE_STORAGE_ACCOUNT_CONTAINER_NAME: 'tfstate'
+          BACKEND_AZURE_STORAGE_ACCOUNT_CONTAINER_KEY_NAME: 'terraform.tfstate'
         working-directory: ${{ env.iac_relative_path }}
 
       - name: Terraform Plan
@@ -98,7 +101,6 @@ jobs:
           path: ./iac
 
       - name: Ensure Terraform Backend Exists
-        id: backend
         uses: ./.github/actions/terraform-backend
         with:
           resource_group_name: "rg-oidc-demo-${{ inputs.target_environment }}"
@@ -112,6 +114,7 @@ jobs:
         run: |
           arguments=()
           arguments+=("init")
+          arguments+=("-backend-config=resource_group_name=${BACKEND_AZURE_RESOURCE_GROUP_NAME}")
           arguments+=("-backend-config=storage_account_name=${BACKEND_AZURE_STORAGE_ACCOUNT_NAME}")
           arguments+=("-backend-config=container_name=${BACKEND_AZURE_STORAGE_ACCOUNT_CONTAINER_NAME}")
           arguments+=("-backend-config=key=${BACKEND_AZURE_STORAGE_ACCOUNT_CONTAINER_KEY_NAME}")
@@ -122,9 +125,10 @@ jobs:
           echo "Running: $command ${arguments[@]}"
           $command "${arguments[@]}"
         env:
-          BACKEND_AZURE_STORAGE_ACCOUNT_NAME: ${{ steps.backend.outputs.storage_account_name }}
-          BACKEND_AZURE_STORAGE_ACCOUNT_CONTAINER_NAME: ${{ steps.backend.outputs.container_name }}
-          BACKEND_AZURE_STORAGE_ACCOUNT_CONTAINER_KEY_NAME: ${{ steps.backend.outputs.key_name }}
+          BACKEND_AZURE_RESOURCE_GROUP_NAME: ${{ env.tf_state_resource_group_name }}
+          BACKEND_AZURE_STORAGE_ACCOUNT_NAME: ${{ env.tf_state_storage_account_name }}
+          BACKEND_AZURE_STORAGE_ACCOUNT_CONTAINER_NAME: 'tfstate'
+          BACKEND_AZURE_STORAGE_ACCOUNT_CONTAINER_KEY_NAME: 'terraform.tfstate'
         working-directory: ${{ env.iac_relative_path }}
 
       - name: Terraform Apply
