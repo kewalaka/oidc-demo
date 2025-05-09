@@ -24,13 +24,18 @@ function Grant-RBACRole {
         [string]$Scope,
         [string]$RoleDefinitionName
     )
-    $assignment = Get-AzRoleAssignment -ApplicationId $PrincipalId -Scope $Scope -RoleDefinitionName $RoleDefinitionName -ErrorAction SilentlyContinue
-    if ($null -eq $assignment) {
-        Write-Host "Granting role '$RoleDefinitionName' to Principal '$PrincipalId' at scope '$Scope'"
-        New-AzRoleAssignment -ApplicationId $PrincipalId -Scope $Scope -RoleDefinitionName $RoleDefinitionName
-    } else {
-        Write-Host "Role '$RoleDefinitionName' already exists for Principal '$PrincipalId' at scope '$Scope'"
-    }
+
+    Write-Host "Granting role '$RoleDefinitionName' to Principal '$PrincipalId' at scope '$Scope'"
+    New-AzRoleAssignment -ApplicationId $PrincipalId -Scope $Scope -RoleDefinitionName $RoleDefinitionName -ErrorAction SilentlyContinue
+    
+    # below is a better way, but it needs AzPowerShell v13 for Get-AzRoleAssignment to support ApplicationId, and the GH runners currently use v12
+    # $assignment = Get-AzRoleAssignment -ApplicationId $PrincipalId -Scope $Scope -RoleDefinitionName $RoleDefinitionName -ErrorAction SilentlyContinue
+    # if ($null -eq $assignment) {
+    #     Write-Host "Granting role '$RoleDefinitionName' to Principal '$PrincipalId' at scope '$Scope'"
+    #     New-AzRoleAssignment -ApplicationId $PrincipalId -Scope $Scope -RoleDefinitionName $RoleDefinitionName
+    # } else {
+    #     Write-Host "Role '$RoleDefinitionName' already exists for Principal '$PrincipalId' at scope '$Scope'"
+    # }
 }
 
 $VerbosePreference = 'SilentlyContinue'
