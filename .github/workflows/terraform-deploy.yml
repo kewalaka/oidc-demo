@@ -47,6 +47,9 @@ jobs:
           client-id: ${{ secrets.ARM_CLIENT_ID }}
           tenant-id: ${{ secrets.ARM_TENANT_ID }}
           subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+        env:
+          ARM_USE_OIDC: true
+          ARM_USE_AZUREAD: true
 
       # - name: Ensure Terraform Backend Exists
       #   uses: ./.github/actions/terraform-backend
@@ -115,6 +118,9 @@ jobs:
           client-id: ${{ secrets.ARM_CLIENT_ID }}
           tenant-id: ${{ secrets.ARM_TENANT_ID }}
           subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+        env:
+          ARM_USE_OIDC: true
+          ARM_USE_AZUREAD: true
 
       # - name: Ensure Terraform Backend Exists
       #   uses: ./.github/actions/terraform-backend
