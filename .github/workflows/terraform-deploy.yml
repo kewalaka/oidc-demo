@@ -41,6 +41,13 @@ jobs:
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
 
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant-id: ${{ secrets.ARM_TENANT_ID }}
+          subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+
       # - name: Ensure Terraform Backend Exists
       #   uses: ./.github/actions/terraform-backend
       #   with:
@@ -99,6 +106,13 @@ jobs:
         with:
           name: tfplan
           path: ./iac
+
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant-id: ${{ secrets.ARM_TENANT_ID }}
+          subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
       # - name: Ensure Terraform Backend Exists
       #   uses: ./.github/actions/terraform-backend
