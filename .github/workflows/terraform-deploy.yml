@@ -67,7 +67,7 @@ jobs:
           BACKEND_AZURE_STORAGE_ACCOUNT_NAME: ${{ steps.backend.outputs.storage_account_name }}
           BACKEND_AZURE_STORAGE_ACCOUNT_CONTAINER_NAME: ${{ steps.backend.outputs.container_name }}
           BACKEND_AZURE_STORAGE_ACCOUNT_CONTAINER_KEY_NAME: ${{ steps.backend.outputs.key_name }}
-        working-directory: ${iac_relative_path}
+        working-directory: ${{ env.iac_relative_path }}
 
       - name: Terraform Plan
         run: terraform plan -var-file="../environments/${{ inputs.target_environment }}/${{ inputs.target_environment }}.terraform.tfvars" -out=tfplan
