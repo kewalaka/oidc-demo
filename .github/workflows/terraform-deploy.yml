@@ -16,6 +16,8 @@ on:
 
 env:
   iac_relative_path: "./iac"
+  tf_state_resource_group_name: "rg-oidc-demo-${{ inputs.target_environment }}"
+  tf_state_storage_account_name: "stoidcdem${{ inputs.target_environment }}01"
 
 defaults:
   run:
@@ -39,35 +41,49 @@ jobs:
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
 
-      - name: Ensure Terraform Backend Exists
-        id: backend
-        uses: ./.github/actions/terraform-backend
+      - name: Login to Azure
+        uses: azure/login@v1
         with:
-          resource_group_name: "rg-oidc-demo-${{ inputs.target_environment }}"
-          storage_account_name: "stoidcdem${{ inputs.target_environment }}01"
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant-id: ${{ secrets.ARM_TENANT_ID }}
+          subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+
+      # - name: Ensure Terraform Backend Exists
+      #   uses: ./.github/actions/terraform-backend
+      #   with:
+      #     resource_group_name: ${{ env.tf_state_resource_group_name }}
+      #     storage_account_name: ${{ env.tf_state_storage_account_name }}
+      #   env:
+      #     ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      #     ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+      #     TF_STATE_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
       - name: Terraform Init
         run: |
-          $arguments = @()
-          $arguments += "init"
-          $arguments += "-backend-config=storage_account_name=$($env:BACKEND_AZURE_STORAGE_ACCOUNT_NAME)"
-          $arguments += "-backend-config=container_name=$($env:BACKEND_AZURE_STORAGE_ACCOUNT_CONTAINER_NAME)"
-          $arguments += "-backend-config=key=$($env:BACKEND_AZURE_STORAGE_ACCOUNT_CONTAINER_KEY_NAME)"
-          $arguments += "-backend-config=use_azuread_auth=true"
+          arguments=()
+          arguments+=("init")
+          arguments+=("-backend-config=resource_group_name=${BACKEND_AZURE_RESOURCE_GROUP_NAME}")
+          arguments+=("-backend-config=storage_account_name=${BACKEND_AZURE_STORAGE_ACCOUNT_NAME}")
+          arguments+=("-backend-config=container_name=${BACKEND_AZURE_STORAGE_ACCOUNT_CONTAINER_NAME}")
+          arguments+=("-backend-config=key=${BACKEND_AZURE_STORAGE_ACCOUNT_CONTAINER_KEY_NAME}")
+          arguments+=("-backend-config=use_azuread_auth=true")
 
           # Run terraform init
-          $command = "terraform"
-          Write-Host "Running: $command $arguments"
-          & $command $arguments
+          command="terraform"
+          echo "Running: $command ${arguments[@]}"
+          $command "${arguments[@]}"
         env:
-          BACKEND_AZURE_STORAGE_ACCOUNT_NAME: ${{ steps.backend.outputs.storage_account_name }}
-          BACKEND_AZURE_STORAGE_ACCOUNT_CONTAINER_NAME: ${{ steps.backend.outputs.container_name }}
-          BACKEND_AZURE_STORAGE_ACCOUNT_CONTAINER_KEY_NAME: ${{ steps.backend.outputs.key_name }}
-        working-directory: ${iac_relative_path}
+          BACKEND_AZURE_RESOURCE_GROUP_NAME: ${{ env.tf_state_resource_group_name }}
+          BACKEND_AZURE_STORAGE_ACCOUNT_NAME: ${{ env.tf_state_storage_account_name }}
+          BACKEND_AZURE_STORAGE_ACCOUNT_CONTAINER_NAME: 'tfstate'
+          BACKEND_AZURE_STORAGE_ACCOUNT_CONTAINER_KEY_NAME: 'terraform.tfstate'
+        working-directory: ${{ env.iac_relative_path }}
 
       - name: Terraform Plan
-        run: terraform plan -var-file="../environments/${{ inputs.target_environment }}/${{ inputs.target_environment }}.terraform.tfvars" -out=tfplan
+        run: terraform plan -var-file="./environments/${{ inputs.target_environment }}.terraform.tfvars" -out=tfplan
         working-directory: ./iac
+        env:
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
       - name: Upload Plan Artifact
         uses: actions/upload-artifact@v4
@@ -93,38 +109,54 @@ jobs:
           name: tfplan
           path: ./iac
 
-      - name: Ensure Terraform Backend Exists
-        id: backend
-        uses: ./.github/actions/terraform-backend
+      - name: Login to Azure
+        uses: azure/login@v1
         with:
-          resource_group_name: "rg-oidc-demo-${{ inputs.target_environment }}"
-          storage_account_name: "stoidcdem${{ inputs.target_environment }}01"
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant-id: ${{ secrets.ARM_TENANT_ID }}
+          subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+
+      # - name: Ensure Terraform Backend Exists
+      #   uses: ./.github/actions/terraform-backend
+      #   with:
+      #     resource_group_name: "rg-oidc-demo-${{ inputs.target_environment }}"
+      #     storage_account_name: "stoidcdem${{ inputs.target_environment }}01"
+      #   env:
+      #     ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      #     ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+      #     TF_STATE_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
       - name: Terraform Init
         run: |
-          $arguments = @()
-          $arguments += "init"
-          $arguments += "-backend-config=storage_account_name=$($env:BACKEND_AZURE_STORAGE_ACCOUNT_NAME)"
-          $arguments += "-backend-config=container_name=$($env:BACKEND_AZURE_STORAGE_ACCOUNT_CONTAINER_NAME)"
-          $arguments += "-backend-config=key=$($env:BACKEND_AZURE_STORAGE_ACCOUNT_CONTAINER_KEY_NAME)"
-          $arguments += "-backend-config=use_azuread_auth=true"
+          arguments=()
+          arguments+=("init")
+          arguments+=("-backend-config=resource_group_name=${BACKEND_AZURE_RESOURCE_GROUP_NAME}")
+          arguments+=("-backend-config=storage_account_name=${BACKEND_AZURE_STORAGE_ACCOUNT_NAME}")
+          arguments+=("-backend-config=container_name=${BACKEND_AZURE_STORAGE_ACCOUNT_CONTAINER_NAME}")
+          arguments+=("-backend-config=key=${BACKEND_AZURE_STORAGE_ACCOUNT_CONTAINER_KEY_NAME}")
+          arguments+=("-backend-config=use_azuread_auth=true")
 
           # Run terraform init
-          $command = "terraform"
-          Write-Host "Running: $command $arguments"
-          & $command $arguments
+          command="terraform"
+          echo "Running: $command ${arguments[@]}"
+          $command "${arguments[@]}"
         env:
-          BACKEND_AZURE_STORAGE_ACCOUNT_NAME: ${{ steps.backend.outputs.storage_account_name }}
-          BACKEND_AZURE_STORAGE_ACCOUNT_CONTAINER_NAME: ${{ steps.backend.outputs.container_name }}
-          BACKEND_AZURE_STORAGE_ACCOUNT_CONTAINER_KEY_NAME: ${{ steps.backend.outputs.key_name }}
-        working-directory: ${iac_relative_path}
+          BACKEND_AZURE_RESOURCE_GROUP_NAME: ${{ env.tf_state_resource_group_name }}
+          BACKEND_AZURE_STORAGE_ACCOUNT_NAME: ${{ env.tf_state_storage_account_name }}
+          BACKEND_AZURE_STORAGE_ACCOUNT_CONTAINER_NAME: 'tfstate'
+          BACKEND_AZURE_STORAGE_ACCOUNT_CONTAINER_KEY_NAME: 'terraform.tfstate'
+        working-directory: ${{ env.iac_relative_path }}
 
       - name: Terraform Apply
         if: ${{ !inputs.destroyResources }}
         run: terraform apply -auto-approve tfplan
         working-directory: ./iac
+        env:
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
       - name: Terraform Destroy
         if: ${{ inputs.destroyResources }}
-        run: terraform destroy -auto-approve -var-file="../environments/${{ inputs.target_environment }}/${{ inputs.target_environment }}.terraform.tfvars"
+        run: terraform destroy -auto-approve -var-file="./environments/${{ inputs.target_environment }}.terraform.tfvars"
         working-directory: ./iac
+        env:
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
