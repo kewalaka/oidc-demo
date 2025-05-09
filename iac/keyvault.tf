@@ -7,7 +7,8 @@ module "keyvault" {
   resource_group_name = local.resource_group_name
   tenant_id           = data.azurerm_client_config.current.tenant_id
 
-  sku_name = "standard"
+  sku_name                 = "standard"
+  purge_protection_enabled = false
 
   tags = local.default_tags
 }
