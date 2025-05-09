@@ -41,15 +41,15 @@ jobs:
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
 
-      - name: Ensure Terraform Backend Exists
-        uses: ./.github/actions/terraform-backend
-        with:
-          resource_group_name: ${{ env.tf_state_resource_group_name }}
-          storage_account_name: ${{ env.tf_state_storage_account_name }}
-        env:
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-          TF_STATE_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      # - name: Ensure Terraform Backend Exists
+      #   uses: ./.github/actions/terraform-backend
+      #   with:
+      #     resource_group_name: ${{ env.tf_state_resource_group_name }}
+      #     storage_account_name: ${{ env.tf_state_storage_account_name }}
+      #   env:
+      #     ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      #     ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+      #     TF_STATE_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
       - name: Terraform Init
         run: |
@@ -73,7 +73,7 @@ jobs:
         working-directory: ${{ env.iac_relative_path }}
 
       - name: Terraform Plan
-        run: terraform plan -var-file="../environments/${{ inputs.target_environment }}/${{ inputs.target_environment }}.terraform.tfvars" -out=tfplan
+        run: terraform plan -var-file="../environments/${{ inputs.target_environment }}.terraform.tfvars" -out=tfplan
         working-directory: ./iac
 
       - name: Upload Plan Artifact
@@ -100,15 +100,15 @@ jobs:
           name: tfplan
           path: ./iac
 
-      - name: Ensure Terraform Backend Exists
-        uses: ./.github/actions/terraform-backend
-        with:
-          resource_group_name: "rg-oidc-demo-${{ inputs.target_environment }}"
-          storage_account_name: "stoidcdem${{ inputs.target_environment }}01"
-        env:
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-          TF_STATE_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      # - name: Ensure Terraform Backend Exists
+      #   uses: ./.github/actions/terraform-backend
+      #   with:
+      #     resource_group_name: "rg-oidc-demo-${{ inputs.target_environment }}"
+      #     storage_account_name: "stoidcdem${{ inputs.target_environment }}01"
+      #   env:
+      #     ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      #     ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+      #     TF_STATE_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
       - name: Terraform Init
         run: |
@@ -138,5 +138,5 @@ jobs:
 
       - name: Terraform Destroy
         if: ${{ inputs.destroyResources }}
-        run: terraform destroy -auto-approve -var-file="../environments/${{ inputs.target_environment }}/${{ inputs.target_environment }}.terraform.tfvars"
+        run: terraform destroy -auto-approve -var-file="../environments/${{ inputs.target_environment }}.terraform.tfvars"
         working-directory: ./iac
