@@ -80,7 +80,7 @@ jobs:
         working-directory: ${{ env.iac_relative_path }}
 
       - name: Terraform Plan
-        run: terraform plan -var-file="../environments/${{ inputs.target_environment }}.terraform.tfvars" -out=tfplan
+        run: terraform plan -var-file="./environments/${{ inputs.target_environment }}.terraform.tfvars" -out=tfplan
         working-directory: ./iac
 
       - name: Upload Plan Artifact
@@ -152,5 +152,5 @@ jobs:
 
       - name: Terraform Destroy
         if: ${{ inputs.destroyResources }}
-        run: terraform destroy -auto-approve -var-file="../environments/${{ inputs.target_environment }}.terraform.tfvars"
+        run: terraform destroy -auto-approve -var-file="./environments/${{ inputs.target_environment }}.terraform.tfvars"
         working-directory: ./iac
