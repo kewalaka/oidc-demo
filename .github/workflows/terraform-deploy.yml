@@ -82,6 +82,8 @@ jobs:
       - name: Terraform Plan
         run: terraform plan -var-file="./environments/${{ inputs.target_environment }}.terraform.tfvars" -out=tfplan
         working-directory: ./iac
+        env:
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
       - name: Upload Plan Artifact
         uses: actions/upload-artifact@v4
@@ -149,8 +151,12 @@ jobs:
         if: ${{ !inputs.destroyResources }}
         run: terraform apply -auto-approve tfplan
         working-directory: ./iac
+        env:
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
       - name: Terraform Destroy
         if: ${{ inputs.destroyResources }}
         run: terraform destroy -auto-approve -var-file="./environments/${{ inputs.target_environment }}.terraform.tfvars"
         working-directory: ./iac
+        env:
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
