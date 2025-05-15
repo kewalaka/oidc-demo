@@ -39,7 +39,7 @@ while true; do
 done
 
 # Verify required parameters
-for var in RESOURCE_GROUP_NAME STORAGE_ACCOUNT_NAME STATE_CONTAINER_NAME ARTIFACT_CONTAINER_NAME; do
+for var in RESOURCE_GROUP_NAME STORAGE_ACCOUNT_NAME STATE_CONTAINER_NAME; do
   if [[ -z "${!var:-}" ]]; then
     echo "Missing required argument: $var"
     exit 1
@@ -154,14 +154,21 @@ function create_storage_account_and_containers() {
     --resource-group "$RESOURCE_GROUP_NAME" \
     --query "[0].value" -o tsv)
 
-  echo "📦 Creating containers: '$STATE_CONTAINER_NAME' and '$ARTIFACT_CONTAINER_NAME'"
-  for container in "$STATE_CONTAINER_NAME" "$ARTIFACT_CONTAINER_NAME"; do
+  echo "📦 Creating container: '$STATE_CONTAINER_NAME'"
+  az storage container create \
+    --name "$STATE_CONTAINER_NAME" \
+    --account-name "$STORAGE_ACCOUNT_NAME" \
+    --account-key "$ACCOUNT_KEY" \
+    --output none
+
+  if [[ -n "${ARTIFACT_CONTAINER_NAME:-}" ]]; then
+    echo "📦 Creating container: '$ARTIFACT_CONTAINER_NAME'"
     az storage container create \
-      --name "$container" \
+      --name "$ARTIFACT_CONTAINER_NAME" \
       --account-name "$STORAGE_ACCOUNT_NAME" \
       --account-key "$ACCOUNT_KEY" \
       --output none
-  done
+  fi
 
   echo "📜 Configuring blob versioning and retention"
   az storage account blob-service-properties update \
@@ -180,7 +187,9 @@ function create_storage_account_and_containers() {
 
   echo "🔁 Recursively re-running RBAC check for each container..."
   ensure_container_and_rbac "$STATE_CONTAINER_NAME"
-  ensure_container_and_rbac "$ARTIFACT_CONTAINER_NAME"
+  if [[ -n "$ARTIFACT_CONTAINER_NAME" ]]; then
+    ensure_container_and_rbac "$ARTIFACT_CONTAINER_NAME"
+  fi
 }
 
 # Start by checking RBAC for both containers
