@@ -57,6 +57,7 @@ jobs:
         with:
           resource_group_name: ${{ env.tf_state_resource_group_name }}
           storage_account_name: ${{ env.tf_state_storage_account_name }}
+          artifact_container_name: "tfartifact"
         env:
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
