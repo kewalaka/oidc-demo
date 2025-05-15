@@ -41,5 +41,5 @@ runs:
 
         echo "resource_group_name=${{ inputs.resource_group_name }}" >> $GITHUB_OUTPUT
         echo "storage_account_name=${{ inputs.storage_account_name }}" >> $GITHUB_OUTPUT
-        echo "container_name=tfstate" >> $GITHUB_OUTPUT
+        echo "container_name=${{ inputs.artifact_container_name }}" >> $GITHUB_OUTPUT
         echo "artifact_container_name=${{ inputs.artifact_container_name }}" >> $GITHUB_OUTPUT

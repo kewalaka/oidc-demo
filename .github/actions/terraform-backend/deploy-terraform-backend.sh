@@ -1,10 +1,55 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 
-RESOURCE_GROUP_NAME="$1"
-STORAGE_ACCOUNT_NAME="$2"
-STATE_CONTAINER_NAME="$3"
-ARTIFACT_CONTAINER_NAME="$4"
+OPTIONS=$(getopt -o '' --long resource-group:,storage-account:,state-container:,artifact-container: -- "$@")
+if [ $? -ne 0 ]; then
+  echo "Invalid options"
+  exit 1
+fi
+
+eval set -- "$OPTIONS"
+
+while true; do
+  case "$1" in
+    --resource-group)
+      RESOURCE_GROUP_NAME="$2"
+      shift 2
+      ;;
+    --storage-account)
+      STORAGE_ACCOUNT_NAME="$2"
+      shift 2
+      ;;
+    --state-container)
+      STATE_CONTAINER_NAME="$2"
+      shift 2
+      ;;
+    --artifact-container)
+      ARTIFACT_CONTAINER_NAME="$2"
+      shift 2
+      ;;
+    --)
+      shift
+      break
+      ;;
+    *)
+      echo "Unknown option: $1"
+      exit 1
+      ;;
+  esac
+done
+
+# Verify required parameters
+for var in RESOURCE_GROUP_NAME STORAGE_ACCOUNT_NAME STATE_CONTAINER_NAME ARTIFACT_CONTAINER_NAME; do
+  if [[ -z "${!var:-}" ]]; then
+    echo "Missing required argument: $var"
+    exit 1
+  fi
+done
+
+echo "Resource Group: $RESOURCE_GROUP_NAME"
+echo "Storage Account: $STORAGE_ACCOUNT_NAME"
+echo "State Container: $STATE_CONTAINER_NAME"
+echo "Artifact Container: $ARTIFACT_CONTAINER_NAME"
 
 STORAGE_SKU="Standard_LRS"
 TAGS="Purpose=Terraform Backend"
