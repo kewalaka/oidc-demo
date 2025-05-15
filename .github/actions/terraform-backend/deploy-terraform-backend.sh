@@ -185,6 +185,8 @@ function create_storage_account_and_containers() {
 
 # Start by checking RBAC for both containers
 ensure_container_and_rbac "$STATE_CONTAINER_NAME"
-ensure_container_and_rbac "$ARTIFACT_CONTAINER_NAME"
+if [[ -n "$ARTIFACT_CONTAINER_NAME" ]]; then
+  ensure_container_and_rbac "$ARTIFACT_CONTAINER_NAME"
+fi
 
 echo "✅ Backend storage and RBAC verified."
