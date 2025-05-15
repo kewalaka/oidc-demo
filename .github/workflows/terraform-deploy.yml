@@ -51,15 +51,15 @@ jobs:
           ARM_USE_OIDC: true
           ARM_USE_AZUREAD: true
 
-      # - name: Ensure Terraform Backend Exists
-      #   uses: ./.github/actions/terraform-backend
-      #   with:
-      #     resource_group_name: ${{ env.tf_state_resource_group_name }}
-      #     storage_account_name: ${{ env.tf_state_storage_account_name }}
-      #   env:
-      #     ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-      #     ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-      #     TF_STATE_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      - name: Ensure Terraform Backend Exists
+        uses: ./.github/actions/terraform-backend
+        with:
+          resource_group_name: ${{ env.tf_state_resource_group_name }}
+          storage_account_name: ${{ env.tf_state_storage_account_name }}
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          TF_STATE_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
       - name: Terraform Init
         run: |
