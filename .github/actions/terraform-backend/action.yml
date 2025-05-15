@@ -17,21 +17,6 @@ inputs:
     required: true
     default: 'tfartifact'
 
-# we pass outputs because the user may override the defaults.
-outputs:
-  resource_group_name:
-    description: 'Terraform State Resource Group Name'
-    value: ${{ steps.backend-setup.outputs.resource_group_name }}
-  storage_account_name:
-    description: 'Terraform State Storage Account Name'
-    value: ${{ steps.backend-setup.outputs.storage_account_name }}
-  container_name:
-    description: 'Terraform State Container Name'
-    value: ${{ steps.backend-setup.outputs.container_name }}
-  artifact_container_name:
-    description: 'Terraform Artifact Container Name'
-    value: ${{ steps.backend-setup.outputs.artifact_container_name }}
-
 runs:
   using: "composite"
   steps:
@@ -44,7 +29,17 @@ runs:
           --state-container '${{ inputs.state_container_name }}' \
           --artifact-container '${{ inputs.artifact_container_name }}'
 
-        echo "resource_group_name=${{ inputs.resource_group_name }}" >> $GITHUB_OUTPUT
-        echo "storage_account_name=${{ inputs.storage_account_name }}" >> $GITHUB_OUTPUT
-        echo "container_name=${{ inputs.container_name }}" >> $GITHUB_OUTPUT
-        echo "artifact_container_name=${{ inputs.artifact_container_name }}" >> $GITHUB_OUTPUT
+# we pass outputs from inputs because the user may override the defaults.
+outputs:
+  resource_group_name:
+    description: 'Terraform State Resource Group Name'
+    value: ${{ inputs.resource_group_name }}
+  storage_account_name:
+    description: 'Terraform State Storage Account Name'
+    value: ${{ inputs.storage_account_name }}
+  container_name:
+    description: 'Terraform State Container Name'
+    value: ${{ inputs.container_name }}
+  artifact_container_name:
+    description: 'Terraform Artifact Container Name'
+    value: ${{ inputs.artifact_container_name }}
