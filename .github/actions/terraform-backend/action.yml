@@ -17,15 +17,20 @@ inputs:
     required: true
     default: 'tfartifact'
 
+# we pass outputs because the user may override the defaults.
 outputs:
   resource_group_name:
     description: 'Terraform State Resource Group Name'
+    value: ${{ steps.backend-setup.outputs.resource_group_name }}
   storage_account_name:
     description: 'Terraform State Storage Account Name'
+    value: ${{ steps.backend-setup.outputs.storage_account_name }}
   container_name:
     description: 'Terraform State Container Name'
+    value: ${{ steps.backend-setup.outputs.container_name }}
   artifact_container_name:
     description: 'Terraform Artifact Container Name'
+    value: ${{ steps.backend-setup.outputs.artifact_container_name }}
 
 runs:
   using: "composite"
