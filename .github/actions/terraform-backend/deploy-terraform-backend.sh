@@ -69,13 +69,6 @@ if [[ -z "$DEPLOY_PRINCIPAL_ID" ]]; then
 fi
 echo "✅ Found Principal ID: $DEPLOY_PRINCIPAL_ID"
 
-# Check if the resource group exists (required for everything else)
-LOCATION=$(az group show --name "$RESOURCE_GROUP_NAME" --query location -o tsv 2>/dev/null || true)
-if [[ -z "$LOCATION" ]]; then
-  echo "❌ Resource Group '$RESOURCE_GROUP_NAME' does not exist."
-  exit 1
-fi
-
 function ensure_container_and_rbac() {
   local container_name="$1"
   local container_scope="/subscriptions/${TF_STATE_SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_NAME}/providers/Microsoft.Storage/storageAccounts/${STORAGE_ACCOUNT_NAME}/blobServices/default/containers/${container_name}"
@@ -83,7 +76,7 @@ function ensure_container_and_rbac() {
   echo "🔍 Checking RBAC on: $container_scope"
 
   ASSIGNED=$(az role assignment list \
-    --assignee "$DEPLOY_PRINCIPAL_ID" \
+    --assignee-object-id "$DEPLOY_PRINCIPAL_ID" \
     --scope "$container_scope" \
     --role "Storage Blob Data Contributor" \
     --query "[].id" -o tsv 2>/dev/null || true)
@@ -130,6 +123,13 @@ function ensure_container_and_rbac() {
 }
 
 function create_storage_account_and_containers() {
+  # Check if the resource group exists (required for everything else)
+  LOCATION=$(az group show --name "$RESOURCE_GROUP_NAME" --query location -o tsv 2>/dev/null || true)
+  if [[ -z "$LOCATION" ]]; then
+    echo "❌ Resource Group '$RESOURCE_GROUP_NAME' does not exist."
+    exit 1
+  fi
+
   echo "🔧 Creating Storage Account '$STORAGE_ACCOUNT_NAME' in '$LOCATION'"
   az storage account create \
     --name "$STORAGE_ACCOUNT_NAME" \
