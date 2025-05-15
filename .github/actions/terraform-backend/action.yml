@@ -37,9 +37,9 @@ outputs:
   storage_account_name:
     description: 'Terraform State Storage Account Name'
     value: ${{ inputs.storage_account_name }}
-  container_name:
+  state_container_name:
     description: 'Terraform State Container Name'
-    value: ${{ inputs.container_name }}
+    value: ${{ inputs.state_container_name }}
   artifact_container_name:
     description: 'Terraform Artifact Container Name'
     value: ${{ inputs.artifact_container_name }}

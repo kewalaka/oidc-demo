@@ -68,7 +68,7 @@ jobs:
           arguments+=("init")
           arguments+=("-backend-config=resource_group_name=${{ steps.terraform-backend.outputs.resource_group_name }}")
           arguments+=("-backend-config=storage_account_name=${{ steps.terraform-backend.outputs.storage_account_name }}")
-          arguments+=("-backend-config=container_name=${{ steps.terraform-backend.outputs.container_name }}")
+          arguments+=("-backend-config=container_name=${{ steps.terraform-backend.outputs.state_container_name }}")
           arguments+=("-backend-config=key=${{ env.BACKEND_AZURE_STORAGE_ACCOUNT_CONTAINER_KEY_NAME }}")
           arguments+=("-backend-config=use_azuread_auth=true")
 
@@ -140,7 +140,7 @@ jobs:
           arguments+=("init")
           arguments+=("-backend-config=resource_group_name=${{ steps.terraform-backend.outputs.resource_group_name }}")
           arguments+=("-backend-config=storage_account_name=${{ steps.terraform-backend.outputs.storage_account_name }}")
-          arguments+=("-backend-config=container_name=${{ steps.terraform-backend.outputs.container_name }}")
+          arguments+=("-backend-config=container_name=${{ steps.terraform-backend.outputs.state_container_name }}")
           arguments+=("-backend-config=key=${{ env.BACKEND_AZURE_STORAGE_ACCOUNT_CONTAINER_KEY_NAME }}")
           arguments+=("-backend-config=use_azuread_auth=true")
 
